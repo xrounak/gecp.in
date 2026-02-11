@@ -5,8 +5,10 @@ import {
     Send, CheckCircle, ArrowRight, ArrowLeft
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
 
 const RegisterClub = () => {
+    const { profile } = useAuth();
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
     const [submitted, setSubmitted] = useState(false);
@@ -36,6 +38,7 @@ const RegisterClub = () => {
             .insert([
                 {
                     ...formData,
+                    requested_by: profile?.user_id,
                     status: 'pending'
                 }
             ]);
