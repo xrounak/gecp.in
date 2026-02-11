@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import MainLayout from './components/layout/MainLayout';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import IntroOverlay from './components/ui/IntroOverlay';
 
 // Lazy loading pages
 const Home = lazy(() => import('./pages/Home'));
@@ -28,6 +29,7 @@ const RoleGuard: React.FC<{ children: React.ReactNode, allowedRoles: string[] }>
 function App() {
   return (
     <AuthProvider>
+      <IntroOverlay />
       <BrowserRouter>
         <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
           <Routes>
