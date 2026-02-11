@@ -48,8 +48,11 @@ const Home = () => {
                             <Link to="/directory" className="btn-govt-primary !bg-govt-accent !text-govt-dark !border-orange-600 shadow-2xl hover:scale-105">
                                 Explore Registry
                             </Link>
-                            <Link to="/register-club" className="btn-govt-outline !bg-transparent !text-white !border-white/30 hover:!bg-white/10">
-                                Institutional Onboarding
+                            <Link to="/login" className="btn-govt-outline !bg-white/10 !text-white !border-white/30 hover:!bg-white/20">
+                                Access Personnel Portal
+                            </Link>
+                            <Link to="/register-club" className="w-full md:w-auto flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest text-white/50 hover:text-govt-accent transition-colors mt-2 md:mt-0">
+                                <Award size={14} /> Official Club Registration Flow
                             </Link>
                         </div>
                     </div>

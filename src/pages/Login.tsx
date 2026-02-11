@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Lock, Mail, LogIn } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
@@ -96,12 +96,15 @@ const Login = () => {
                 </form>
 
                 <div className="mt-8 pt-8 border-t text-center space-y-4">
-                    <p className="text-xs text-gray-500">
-                        Unauthorized access to this portal is strictly prohibited and subject to institutional policies.
+                    <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest leading-relaxed">
+                        Don't have an institutional account? <Link to="/signup" className="text-govt-blue hover:underline">Register Identity Here</Link>
                     </p>
-                    <button onClick={() => navigate('/')} className="text-govt-blue text-xs font-bold hover:underline">
-                        Return to Public Portal
-                    </button>
+                    <div className="flex flex-col gap-2">
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">Access strictly restricted to authorized portal personnel.</p>
+                        <button onClick={() => navigate('/')} className="text-govt-blue text-xs font-black hover:underline uppercase tracking-tighter">
+                            Return to Public Registry
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

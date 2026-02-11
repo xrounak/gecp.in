@@ -12,8 +12,10 @@ const NoticeBoardPage = lazy(() => import('./pages/NoticeBoardPage'));
 const EventsPage = lazy(() => import('./pages/EventsPage'));
 const RegisterClub = lazy(() => import('./pages/RegisterClub'));
 const Login = lazy(() => import('./pages/Login'));
+const SignUp = lazy(() => import('./pages/SignUp'));
 const ClubDashboard = lazy(() => import('./pages/Dashboard/ClubDashboard'));
 const AdminDashboard = lazy(() => import('./pages/Dashboard/AdminDashboard'));
+const StudentDashboard = lazy(() => import('./pages/Dashboard/StudentDashboard'));
 
 // Role Guard Component
 const RoleGuard: React.FC<{ children: React.ReactNode, allowedRoles: string[] }> = ({ children, allowedRoles }) => {
@@ -41,8 +43,15 @@ function App() {
               <Route path="events" element={<EventsPage />} />
               <Route path="register-club" element={<RegisterClub />} />
               <Route path="login" element={<Login />} />
+              <Route path="signup" element={<SignUp />} />
 
               {/* Protected Dashboards */}
+              <Route path="dashboard/student" element={
+                <RoleGuard allowedRoles={['student', 'club_admin', 'moderator', 'super_admin']}>
+                  <StudentDashboard />
+                </RoleGuard>
+              } />
+
               <Route path="dashboard/club_admin" element={
                 <RoleGuard allowedRoles={['club_admin', 'moderator', 'super_admin']}>
                   <ClubDashboard />

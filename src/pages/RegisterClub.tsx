@@ -51,6 +51,44 @@ const RegisterClub = () => {
         setLoading(false);
     };
 
+    if (!profile) {
+        return (
+            <div className="bg-govt-light min-h-[80vh] flex items-center justify-center p-4">
+                <div className="bg-white border-t-8 border-red-600 shadow-2xl max-w-2xl w-full p-12 text-center space-y-8">
+                    <div className="flex justify-center flex-col items-center gap-4">
+                        <div className="bg-red-50 p-6 rounded-full text-red-600">
+                            <User size={64} />
+                        </div>
+                        <h2 className="text-3xl font-black text-govt-dark uppercase tracking-tighter">Identity Verification Required</h2>
+                    </div>
+
+                    <p className="text-gray-500 font-medium leading-relaxed max-w-md mx-auto italic">
+                        The Institutional Club Registry is a restricted repository. You must establish your student identity or personnel credentials before initiating an onboarding request.
+                    </p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+                        <button
+                            onClick={() => navigate('/signup')}
+                            className="bg-govt-dark text-white font-black px-8 py-4 rounded hover:bg-govt-blue transition-all uppercase tracking-widest text-xs"
+                        >
+                            Register Identity
+                        </button>
+                        <button
+                            onClick={() => navigate('/login')}
+                            className="bg-white border-2 border-govt-dark text-govt-dark font-black px-8 py-4 rounded hover:bg-govt-light transition-all uppercase tracking-widest text-xs"
+                        >
+                            Existing Personnel Login
+                        </button>
+                    </div>
+
+                    <button onClick={() => navigate('/')} className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] hover:text-govt-blue py-4">
+                        Return to Public Domain
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
     if (submitted) {
         return (
             <div className="bg-govt-light min-h-[80vh] flex items-center justify-center p-4">
