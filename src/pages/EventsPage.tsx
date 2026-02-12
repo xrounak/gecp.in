@@ -75,7 +75,7 @@ const EventsPage = () => {
                                         {event.description || "Official institutional event coordinated by students chapters. Click for more details."}
                                     </p>
                                     <div className="pt-2 flex justify-between items-center">
-                                        <button className="text-xs font-bold text-govt-dark flex items-center gap-1 hover:text-govt-accent">
+                                        <button onClick={() => window.open(event.registration_url, "_blank")} className="text-xs font-bold text-govt-dark flex items-center gap-1 hover:text-govt-accent">
                                             Full Protocol <ChevronRight size={14} />
                                         </button>
                                         {event.registration_url && (
