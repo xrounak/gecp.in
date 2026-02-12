@@ -31,7 +31,7 @@ const Navbar = () => {
                 <div className="flex justify-between items-center h-20">
                     <Link to="/" className="flex items-center gap-3 group">
                         <div className="bg-govt-dark p-1.5 rounded-full overflow-hidden transition-transform group-hover:scale-105 shadow-md border border-govt-border">
-                            <img src="/logo2.jpeg" alt="GECP" className="h-8 w-8 invert rounded-full" />
+                            <img src="/logo.jpeg" alt="GECP" className="h-8 w-8 invert rounded-full" />
                         </div>
                         <div className="flex flex-col">
                             <h1 className="text-lg font-black text-govt-dark leading-none tracking-tight group-hover:text-govt-blue transition-colors uppercase">

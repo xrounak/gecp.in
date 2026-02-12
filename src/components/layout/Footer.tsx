@@ -14,7 +14,7 @@ const Footer = () => {
                     <div className="col-span-1 md:col-span-2 space-y-6">
                         <div className="flex items-center gap-3">
                             <div className="bg-govt-dark p-1 rounded-full overflow-hidden">
-                                <img src="/logo2.jpeg" alt="GECP Logo" className="h-8 w-8 invert rounded-full" />
+                                <img src="/logo.jpeg" alt="GECP Logo" className="h-8 w-8 invert rounded-full" />
                             </div>
                             <h3 className="text-xl font-black text-govt-dark uppercase tracking-tight">{siteConfig.name}</h3>
                         </div>
@@ -25,7 +25,7 @@ const Footer = () => {
                             <div className="flex flex-col gap-2">
                                 <span className="text-[10px] uppercase font-bold text-gray-400 tracking-widest">Powered By</span>
                                 <div className="flex gap-4 items-center opacity-60 hover:opacity-100 transition-opacity">
-                                    <img src="/logo2.jpeg" alt="Platform" className="h-6 rounded-full grayscale" />
+                                    <img src="/logo.jpeg" alt="Platform" className="h-6 rounded-full grayscale" />
                                     <span className="font-bold text-xs">Vite Enterprise</span>
                                 </div>
                             </div>
