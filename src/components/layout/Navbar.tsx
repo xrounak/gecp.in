@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { User, LogOut, Menu, X, Bell } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { getUserNotifications } from '../../lib/notifications';
+import { siteConfig } from '../../config/site';
 
 const Navbar = () => {
     const { user, role, signOut } = useAuth();
@@ -28,13 +29,15 @@ const Navbar = () => {
             <div className="max-w-7xl mx-auto px-4">
                 {/* Main Header */}
                 <div className="flex justify-between items-center h-20">
-                    <Link to="/" className="flex items-center gap-4 group">
-                        <div className="bg-white p-1.5 rounded-full transform group-hover:rotate-12 transition-transform duration-300">
-                            <img src="/logo.jpeg" alt="Portal Logo" className="h-10 w-10 rounded-full" />
+                    <Link to="/" className="flex items-center gap-3 group">
+                        <div className="bg-govt-dark p-1.5 rounded-full overflow-hidden transition-transform group-hover:scale-105 shadow-md border border-govt-border">
+                            <img src="/logo.png" alt="GECP" className="h-8 w-8 invert rounded-full" />
                         </div>
-                        <div className="border-l border-white/20 pl-4">
-                            <h1 className="text-xl font-extrabold leading-none tracking-tight uppercase">College Clubs</h1>
-                            <p className="text-[10px] text-govt-accent font-bold uppercase mt-1 tracking-[0.2em]">Institutional Repository</p>
+                        <div className="flex flex-col">
+                            <h1 className="text-lg font-black text-govt-dark leading-none tracking-tight group-hover:text-govt-blue transition-colors uppercase">
+                                {siteConfig.acronym} <span className="text-govt-accent">Portal</span>
+                            </h1>
+                            <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest leading-none mt-1">Student Affairs Div.</span>
                         </div>
                     </Link>
 

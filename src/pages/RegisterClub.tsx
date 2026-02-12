@@ -7,6 +7,8 @@ import {
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 
+import { siteConfig } from '../config/site';
+
 const RegisterClub = () => {
     const { profile } = useAuth();
     const [step, setStep] = useState(1);
@@ -126,7 +128,7 @@ const RegisterClub = () => {
             <div className="bg-govt-dark text-white py-12 px-4 shadow-inner">
                 <div className="max-w-4xl mx-auto">
                     <h2 className="text-3xl font-bold uppercase tracking-tight border-l-4 border-govt-accent pl-6">New Club Registration Portal</h2>
-                    <p className="mt-2 text-gray-400 pl-10">Official Onboarding for Institutional Recognition (Session 2026-27)</p>
+                    <p className="mt-2 text-gray-400 pl-10">Official Onboarding for Institutional Recognition (Session {new Date().getFullYear()}-{new Date().getFullYear() + 1})</p>
                 </div>
             </div>
 
@@ -214,7 +216,7 @@ const RegisterClub = () => {
                                         <input
                                             type="email" name="contact_email" required
                                             className="w-full border-b-2 border-gray-200 focus:border-govt-blue outline-none py-2 text-sm transition-all"
-                                            placeholder="name@college.edu.in"
+                                            placeholder="official@gmail.com"
                                             value={formData.contact_email} onChange={handleChange}
                                         />
                                     </div>
@@ -253,7 +255,7 @@ const RegisterClub = () => {
 
                                 <div className="bg-yellow-50 p-4 border-l-4 border-yellow-400 text-xs text-yellow-800 space-y-2">
                                     <p className="font-bold flex items-center gap-1 uppercase tracking-tight">Declaration:</p>
-                                    <p>I hereby declare that the information provided above is true to the best of my knowledge and complies with the Student Council Guidelines of 2026.</p>
+                                    <p>I hereby declare that the information provided above is true to the best of my knowledge and complies with the {siteConfig.shortName} Guidelines of {new Date().getFullYear()}.</p>
                                 </div>
                             </div>
                         )}

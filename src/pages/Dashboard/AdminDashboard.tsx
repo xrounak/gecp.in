@@ -7,9 +7,11 @@ import {
 import { supabase } from '../../lib/supabase';
 import { createNotification } from '../../lib/notifications';
 
+import type { Club, ClubRequest } from '../../types';
+
 const AdminDashboard = () => {
-    const [requests, setRequests] = useState<any[]>([]);
-    const [clubs, setClubs] = useState<any[]>([]);
+    const [requests, setRequests] = useState<ClubRequest[]>([]);
+    const [clubs, setClubs] = useState<Club[]>([]);
     const [stats, setStats] = useState({
         totalClubs: 0,
         totalMembers: 0,
@@ -20,39 +22,7 @@ const AdminDashboard = () => {
     const [loading, setLoading] = useState(true);
 
 
-    const fetchData = async () => {
-        setLoading(true);
-        // 1. Fetch Requests
-        const { data: reqData } = await supabase
-            .from('club_requests')
-            .select('*')
-            .order('created_at', { ascending: false });
 
-        setRequests(reqData || []);
-
-        // 2. Fetch Clubs
-        const { data: clubData } = await supabase
-            .from('clubs')
-            .select('*')
-            .order('created_at', { ascending: false });
-
-        setClubs(clubData || []);
-
-        // 3. Fetch Global Stats (Parallel for performance)
-        const [membersRes, eventsRes] = await Promise.all([
-            supabase.from('club_members').select('user_id', { count: 'exact', head: true }),
-            supabase.from('events').select('id', { count: 'exact', head: true })
-        ]);
-
-        setStats({
-            totalClubs: clubData?.length || 0,
-            totalMembers: membersRes.count || 0,
-            totalEvents: eventsRes.count || 0,
-            pendingRequests: reqData?.filter(r => r.status === 'pending').length || 0
-        });
-
-        setLoading(false);
-    };
 
     const handleRequestAction = async (requestId: string, action: 'approved' | 'rejected') => {
         let notes = '';
@@ -265,6 +235,40 @@ const AdminDashboard = () => {
             alert(`Verification status updated to: ${newStatus ? 'Authorized' : 'In Review'}`);
             await fetchData();
         }
+        setLoading(false);
+    };
+
+    const fetchData = async () => {
+        setLoading(true);
+        // 1. Fetch Requests
+        const { data: reqData } = await supabase
+            .from('club_requests')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        setRequests((reqData as ClubRequest[]) || []);
+
+        // 2. Fetch Clubs
+        const { data: clubData } = await supabase
+            .from('clubs')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        setClubs((clubData as Club[]) || []);
+
+        // 3. Fetch Global Stats (Parallel for performance)
+        const [membersRes, eventsRes] = await Promise.all([
+            supabase.from('club_members').select('user_id', { count: 'exact', head: true }),
+            supabase.from('events').select('id', { count: 'exact', head: true })
+        ]);
+
+        setStats({
+            totalClubs: clubData?.length || 0,
+            totalMembers: membersRes.count || 0,
+            totalEvents: eventsRes.count || 0,
+            pendingRequests: reqData?.filter((r: ClubRequest) => r.status === 'pending').length || 0
+        });
+
         setLoading(false);
     };
 

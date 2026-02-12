@@ -1,25 +1,33 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Bell, ChevronRight } from 'lucide-react';
-
-interface Notice {
-    id: string;
-    title: string;
-    published_at: string;
-    type: string;
-}
+import { supabase } from '../../lib/supabase';
+import type { ClubUpdate } from '../../types';
 
 const NoticeBoard = () => {
+    const [notices, setNotices] = useState<ClubUpdate[]>([]);
+    const [loading, setLoading] = useState(true);
+
     // Current time for purity-safe calculations
     const now = React.useMemo(() => Date.now(), []);
 
-    // Mock data for initial UI (usually this would come from an API/Supabase)
-    const notices: Notice[] = React.useMemo(() => [
-        { id: '1', title: 'Institutional Framework for Student Chapters 2026', published_at: new Date(now - 3600000).toISOString(), type: 'Protocol' },
-        { id: '2', title: 'Mandatory Audit: Resource Allocation for Tech Clubs', published_at: new Date(now - 7200000).toISOString(), type: 'Audit' },
-        { id: '3', title: 'Global Symposium on Autonomous Systems: Call for Registry', published_at: new Date(now - 86400000).toISOString(), type: 'Event' },
-        { id: '4', title: 'Maintenance Window: Unified Repository Portal', published_at: new Date(now - 172800000).toISOString(), type: 'System' },
-    ], [now]);
+    useEffect(() => {
+        const fetchNotices = async () => {
+            const { data } = await supabase
+                .from('updates')
+                .select('*, clubs(name, slug)')
+                .eq('is_published', true)
+                .order('created_at', { ascending: false })
+                .limit(5);
+
+            if (data) {
+                setNotices(data as ClubUpdate[]);
+            }
+            setLoading(false);
+        };
+
+        fetchNotices();
+    }, []);
 
     const isNew = (dateStr: string) => {
         const diff = now - new Date(dateStr).getTime();
@@ -44,29 +52,44 @@ const NoticeBoard = () => {
             </div>
 
             <div className="divide-y divide-govt-border max-h-[420px] overflow-y-auto scrollbar-thin scrollbar-thumb-govt-blue/20">
-                {notices.map((notice) => (
-                    <div key={notice.id} className="p-5 hover:bg-govt-light transition-colors group relative">
-                        <div className="flex justify-between items-start mb-2">
-                            <span className="text-[8px] font-black uppercase tracking-[0.2em] text-govt-blue bg-govt-blue/5 border border-govt-blue/10 px-2 py-0.5 rounded-sm">
-                                {notice.type}
-                            </span>
-                            <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">
-                                {new Date(notice.published_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                            </span>
-                        </div>
-                        <Link to={`/notices/${notice.id}`} className="block">
-                            <h4 className="text-sm font-extrabold text-govt-dark leading-snug group-hover:text-govt-blue transition-colors">
-                                {notice.title}
-                                {isNew(notice.published_at) && (
-                                    <span className="ml-2 inline-flex items-center gap-1 bg-govt-accent text-govt-dark text-[8px] font-black px-1.5 py-0.5 rounded-sm shadow-sm">
-                                        PRIORITY
-                                    </span>
-                                )}
-                            </h4>
-                        </Link>
-                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-govt-accent scale-y-0 group-hover:scale-y-100 transition-transform origin-top"></div>
+                {loading ? (
+                    <div className="p-8 text-center text-xs text-gray-400 animate-pulse">
+                        Synchronizing with central dispatch...
                     </div>
-                ))}
+                ) : notices.length > 0 ? (
+                    notices.map((notice) => (
+                        <div key={notice.id} className="p-5 hover:bg-govt-light transition-colors group relative">
+                            <div className="flex justify-between items-start mb-2">
+                                <span className="text-[8px] font-black uppercase tracking-[0.2em] text-govt-blue bg-govt-blue/5 border border-govt-blue/10 px-2 py-0.5 rounded-sm">
+                                    {notice.type}
+                                </span>
+                                <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">
+                                    {new Date(notice.published_at || notice.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                </span>
+                            </div>
+                            <Link to={`/notices/${notice.id || '#'}`} className="block">
+                                <h4 className="text-sm font-extrabold text-govt-dark leading-snug group-hover:text-govt-blue transition-colors">
+                                    {notice.title}
+                                    {isNew(notice.published_at || notice.created_at) && (
+                                        <span className="ml-2 inline-flex items-center gap-1 bg-govt-accent text-govt-dark text-[8px] font-black px-1.5 py-0.5 rounded-sm shadow-sm">
+                                            PRIORITY
+                                        </span>
+                                    )}
+                                </h4>
+                            </Link>
+                            {notice.clubs && (
+                                <Link to={`/club/${notice.clubs.slug}`} className="text-[9px] font-bold text-gray-400 mt-1 hover:text-govt-blue block">
+                                    via {notice.clubs.name}
+                                </Link>
+                            )}
+                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-govt-accent scale-y-0 group-hover:scale-y-100 transition-transform origin-top"></div>
+                        </div>
+                    ))
+                ) : (
+                    <div className="p-8 text-center text-xs text-gray-400 italic">
+                        No active dispatches at this moment.
+                    </div>
+                )}
             </div>
 
             <div className="p-4 bg-white border-t border-govt-border text-center">
@@ -76,5 +99,5 @@ const NoticeBoard = () => {
     );
 };
 
-
 export default NoticeBoard;
+

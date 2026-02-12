@@ -124,7 +124,7 @@ const ClubDetails = () => {
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-govt-dark to-transparent"></div>
                 <div className="absolute bottom-10 left-0 w-full">
-                    <div className="max-w-7xl mx-auto px-4 flex items-end gap-8">
+                    <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center md:items-end gap-8">
                         <div className="h-40 w-40 bg-white border-4 border-white rounded-full shadow-2xl overflow-hidden flex items-center justify-center p-4 transform translate-y-12">
                             {club.logo_url ? (
                                 <img src={club.logo_url} alt={club.name} className="max-h-full max-w-full object-contain rounded-full" />
@@ -132,12 +132,12 @@ const ClubDetails = () => {
                                 <Users size={64} className="text-gray-300" />
                             )}
                         </div>
-                        <div className="flex-grow pb-2">
-                            <div className="flex items-center gap-3">
-                                <h1 className="text-4xl font-extrabold text-white">{club.name}</h1>
+                        <div className="flex-grow pb-2 text-center md:text-left">
+                            <div className="flex flex-col md:flex-row items-center gap-3">
+                                <h1 className="text-3xl md:text-4xl font-extrabold text-white">{club.name}</h1>
                                 {club.is_verified && <CheckCircle size={28} className="text-govt-accent fill-govt-accent text-white" />}
                             </div>
-                            <div className="flex items-center gap-4 text-gray-300 mt-2">
+                            <div className="flex items-center justify-center md:justify-start gap-4 text-gray-300 mt-2">
                                 <span className="text-sm uppercase font-bold tracking-widest">{club.category}</span>
                                 <span className="h-1 w-1 bg-gray-500 rounded-full"></span>
                                 <span className="text-sm italic">Established {new Date(club.created_at).getFullYear()}</span>

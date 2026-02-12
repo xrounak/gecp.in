@@ -4,9 +4,10 @@ import {
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Link } from 'react-router-dom';
+import type { ClubUpdate } from '../types';
 
 const NoticeBoardPage = () => {
-    const [notices, setNotices] = useState<any[]>([]);
+    const [notices, setNotices] = useState<ClubUpdate[]>([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('All');
 
@@ -18,7 +19,7 @@ const NoticeBoardPage = () => {
                 .eq('is_published', true)
                 .order('published_at', { ascending: false });
 
-            setNotices(data || []);
+            setNotices((data as ClubUpdate[]) || []);
             setLoading(false);
         };
         fetchNotices();

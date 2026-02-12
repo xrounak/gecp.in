@@ -274,7 +274,7 @@ const ClubDashboard = () => {
 
     const handleCreateUpdate = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!club) return;
+        if (!club || !profile?.user_id) return;
         const payload = {
             ...updateForm,
             club_id: club.id,
@@ -300,7 +300,7 @@ const ClubDashboard = () => {
 
     const handleCreateEvent = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!club) return;
+        if (!club || !profile?.user_id) return;
         const payload = {
             ...eventForm,
             club_id: club.id,

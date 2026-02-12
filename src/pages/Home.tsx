@@ -3,23 +3,38 @@ import { Link } from 'react-router-dom';
 import { Search, Users, ExternalLink, Calendar, ChevronRight, Award } from 'lucide-react';
 import NoticeBoard from '../components/ui/NoticeBoard';
 import { supabase } from '../lib/supabase';
+import type { Club } from '../types';
+import { siteConfig } from '../config/site';
 
 const Home = () => {
-    const [featuredClubs, setFeaturedClubs] = useState<any[]>([]);
+    const [featuredClubs, setFeaturedClubs] = useState<Club[]>([]);
+    const [stats, setStats] = useState({ clubs: 0, events: 0, active: 0 });
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const fetchFeatured = async () => {
-            const { data } = await supabase
+        const fetchHomeData = async () => {
+            // Fetch Featured Clubs
+            const { data: clubsData } = await supabase
                 .from('clubs')
                 .select('*')
                 .eq('is_verified', true)
                 .limit(3);
 
-            if (data) setFeaturedClubs(data);
+            if (clubsData) setFeaturedClubs(clubsData);
+
+            // Fetch Stats (Approximate counts)
+            const { count: clubCount } = await supabase.from('clubs').select('*', { count: 'estimated', head: true });
+            const { count: eventCount } = await supabase.from('events').select('*', { count: 'estimated', head: true });
+
+            setStats({
+                clubs: clubCount || 0,
+                events: eventCount || 0,
+                active: (clubCount || 0) // For now assuming all are active or similar metric
+            });
+
             setLoading(false);
         };
-        fetchFeatured();
+        fetchHomeData();
     }, []);
 
     return (
@@ -36,9 +51,9 @@ const Home = () => {
                     <div className="lg:w-3/5 space-y-8 animate-fade-up">
                         <div className="inline-flex items-center gap-2 bg-white/10 px-4 py-1.5 rounded-full border border-white/20 backdrop-blur-sm shadow-xl">
                             <span className="w-2 h-2 bg-govt-accent rounded-full animate-pulse"></span>
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Official Institutional Registry</span>
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em]">{siteConfig.shortName} Official Registry</span>
                         </div>
-                        <h2 className="text-5xl md:text-6xl font-black tracking-tight leading-[1.1]">
+                        <h2 className="text-4xl md:text-6xl font-black tracking-tight leading-[1.1]">
                             The Central Hub for <span className="text-govt-accent">Student Excellence</span> & Innovation
                         </h2>
                         <p className="text-xl text-white/70 max-w-2xl font-medium leading-relaxed">
@@ -60,9 +75,9 @@ const Home = () => {
                         <div className="relative group">
                             <div className="absolute -inset-4 bg-govt-accent/20 blur-2xl rounded-full group-hover:bg-govt-accent/30 transition-all duration-500"></div>
                             <div className="bg-white p-12 rounded-full shadow-2xl relative rotate-3 group-hover:rotate-0 transition-transform duration-500 flex items-center justify-center overflow-hidden">
-                                <img src="/logo.jpeg" alt="College Emblem" className="h-48 w-48 opacity-10 rounded-full" />
+                                <img src="/logo.png" alt="College Emblem" className="h-48 w-48 opacity-10 rounded-full" />
                                 <div className="absolute inset-0 flex items-center justify-center font-black text-govt-dark text-center px-8 leading-tight">
-                                    CENTRAL REPOSITORY <br /> FOR STUDENT BODIES
+                                    {siteConfig.acronym} <br /> STUDENT BODIES
                                 </div>
                             </div>
                         </div>
@@ -118,15 +133,15 @@ const Home = () => {
                         </div>
 
                         {/* Stats Bar */}
-                        <div className="grid grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             {[
-                                { label: 'Registered Entities', value: '48+', icon: <Users size={22} /> },
-                                { label: 'Upcoming Protocols', value: '14', icon: <Calendar size={22} /> },
-                                { label: 'Verified Chapters', value: '22', icon: <Award size={22} /> },
+                                { label: 'Registered Entities', value: stats.clubs, icon: <Users size={22} /> },
+                                { label: 'Upcoming Protocols', value: stats.events, icon: <Calendar size={22} /> },
+                                { label: 'Verified Chapters', value: stats.active, icon: <Award size={22} /> },
                             ].map((stat, i) => (
                                 <div key={i} className="card-premium p-8 text-center hover-lift border-b-4 border-b-govt-blue">
                                     <div className="flex justify-center text-govt-accent mb-3">{stat.icon}</div>
-                                    <div className="text-3xl font-black text-govt-dark">{stat.value}</div>
+                                    <div className="text-3xl font-black text-govt-dark">{loading ? '-' : stat.value}</div>
                                     <div className="text-[9px] uppercase font-black text-gray-400 tracking-[0.2em] mt-2 leading-tight px-2">{stat.label}</div>
                                 </div>
                             ))}
@@ -169,11 +184,11 @@ const Home = () => {
             <section className="max-w-7xl mx-auto px-4 py-24">
                 <div className="card-premium flex flex-col md:flex-row items-center gap-12 p-12 bg-white relative overflow-hidden group">
                     <div className="absolute -bottom-10 -left-10 opacity-5 group-hover:opacity-10 transition-all duration-700">
-                        <img src="/logo.jpeg" alt="Decoration" className="h-64 w-64 rotate-12" />
+                        <img src="/logo.png" alt="Decoration" className="h-64 w-64 rotate-12" />
                     </div>
                     <div className="md:w-1/4 flex justify-center">
                         <div className="h-40 w-40 govt-gradient p-10 rounded-full flex items-center justify-center text-white shadow-2xl">
-                            <img src="/logo.jpeg" alt="SAC" className="invert" />
+                            <img src="/logo.png" alt="SAC" className="invert" />
                         </div>
                     </div>
                     <div className="md:w-3/4 space-y-6 relative z-10">

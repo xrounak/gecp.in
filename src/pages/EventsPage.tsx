@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import { Calendar, MapPin, Globe, ExternalLink, ChevronRight, Clock } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Link } from 'react-router-dom';
+import type { ClubEvent } from '../types';
 
 const EventsPage = () => {
-    const [events, setEvents] = useState<any[]>([]);
+    const [events, setEvents] = useState<ClubEvent[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -15,7 +16,7 @@ const EventsPage = () => {
                 .eq('is_published', true)
                 .order('start_time', { ascending: true });
 
-            setEvents(data || []);
+            setEvents((data as ClubEvent[]) || []);
             setLoading(false);
         };
         fetchEvents();
