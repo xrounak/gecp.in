@@ -3,16 +3,20 @@ import { useParams, Link } from 'react-router-dom';
 import {
     Users, Mail, Phone, Calendar,
     ExternalLink, Facebook, Instagram, Twitter,
-    CheckCircle, Bell
+    CheckCircle, Bell, Clock, XCircle, Shield, PlusCircle
 } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 
 const ClubDetails = () => {
     const { slug } = useParams();
+    const { profile } = useAuth();
     const [club, setClub] = useState<any>(null);
     const [updates, setUpdates] = useState<any[]>([]);
     const [events, setEvents] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [membership, setMembership] = useState<any>(null);
+    const [isJoining, setIsJoining] = useState(false);
 
     useEffect(() => {
         const fetchClubData = async () => {
@@ -46,12 +50,55 @@ const ClubDetails = () => {
                     .order('start_time', { ascending: true });
 
                 setEvents(eventData || []);
+
+                // Fetch membership if user logged in
+                if (profile?.user_id) {
+                    const { data: mem } = await supabase
+                        .from('club_members')
+                        .select('*')
+                        .eq('club_id', clubData.id)
+                        .eq('user_id', profile.user_id)
+                        .maybeSingle();
+                    setMembership(mem);
+                }
             }
             setLoading(false);
         };
 
         fetchClubData();
-    }, [slug]);
+    }, [slug, profile]);
+
+    const handleJoinClub = async () => {
+        if (!profile) {
+            alert('Authentication Required: Please sign in to initiate institutional onboarding.');
+            return;
+        }
+        if (!club) return;
+
+        setIsJoining(true);
+        const { error } = await supabase
+            .from('club_members')
+            .insert([{
+                club_id: club.id,
+                user_id: profile.user_id,
+                status: 'pending',
+                is_admin: false
+            }]);
+
+        if (error) {
+            alert('Request Failed: ' + error.message);
+        } else {
+            alert('Protocol Initiated: Your request is now in the administrative vetting queue.');
+            const { data: mem } = await supabase
+                .from('club_members')
+                .select('*')
+                .eq('club_id', club.id)
+                .eq('user_id', profile.user_id)
+                .maybeSingle();
+            setMembership(mem);
+        }
+        setIsJoining(false);
+    };
 
     const handleWebsiteClick = async () => {
         if (!club) return;
@@ -151,9 +198,43 @@ const ClubDetails = () => {
                     <div className="space-y-8">
                         {/* Quick Actions */}
                         <div className="bg-white border p-8 rounded shadow-sm space-y-6">
-                            <button className="w-full bg-govt-dark text-white font-bold py-3 rounded hover:bg-govt-blue transition-colors flex items-center justify-center gap-2">
-                                Join this Club
-                            </button>
+                            {membership ? (
+                                <div className="space-y-4">
+                                    <div className={`w-full py-3 rounded text-[11px] font-black uppercase tracking-widest flex items-center justify-center gap-2 border-2 ${membership.status === 'pending'
+                                        ? 'bg-yellow-50 border-yellow-200 text-yellow-600'
+                                        : membership.status === 'active'
+                                            ? 'bg-green-50 border-green-200 text-green-600'
+                                            : 'bg-red-50 border-red-200 text-red-600'
+                                        }`}>
+                                        {membership.status === 'pending' && <Clock size={16} />}
+                                        {membership.status === 'active' && <CheckCircle size={16} />}
+                                        {membership.status === 'rejected' && <XCircle size={16} />}
+                                        {membership.status === 'pending' ? 'Verification Pending' : membership.status === 'active' ? 'Authorized Member' : 'Registry Denied'}
+                                    </div>
+                                    {membership.status === 'active' && membership.is_admin && (
+                                        <Link
+                                            to="/club-dashboard"
+                                            className="w-full bg-govt-dark text-white font-bold py-3 rounded hover:bg-govt-blue transition-colors flex items-center justify-center gap-2 text-xs uppercase tracking-widest"
+                                        >
+                                            <Shield size={16} className="text-govt-accent" /> Club Console
+                                        </Link>
+                                    )}
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={handleJoinClub}
+                                    disabled={isJoining}
+                                    className="w-full bg-govt-dark text-white font-bold py-3 rounded hover:bg-govt-blue transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed group"
+                                >
+                                    {isJoining ? (
+                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                    ) : (
+                                        <PlusCircle size={18} className="group-hover:rotate-90 transition-transform" />
+                                    )}
+                                    Join this Club
+                                </button>
+                            )}
+
                             {club.website_url && (
                                 <a
                                     href={club.website_url}

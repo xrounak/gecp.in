@@ -1,16 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
     User, Book, Award, Clock, ArrowRight,
-    CheckCircle, XCircle, AlertCircle, PlusCircle
+    CheckCircle, XCircle, AlertCircle, PlusCircle,
+    ChevronRight
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
+import { getUserNotifications } from '../../lib/notifications';
 
 const StudentDashboard = () => {
     const { profile } = useAuth();
     const [myRequests, setMyRequests] = useState<any[]>([]);
     const [myMemberships, setMyMemberships] = useState<any[]>([]);
+    const [notifications, setNotifications] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
 
@@ -25,14 +28,20 @@ const StudentDashboard = () => {
                 .eq('requested_by', profile.user_id)
                 .order('created_at', { ascending: false });
 
-            // 2. Fetch Active Memberships
+            // 2. Fetch All Memberships (Active, Pending, Rejected)
             const { data: memberships } = await supabase
                 .from('club_members')
                 .select('*, clubs(*)')
-                .eq('user_id', profile.user_id);
+                .eq('user_id', profile.user_id)
+                .order('created_at', { ascending: false });
 
             setMyRequests(requests || []);
             setMyMemberships(memberships || []);
+
+            // 3. Fetch Notifications
+            const { data: notifs } = await getUserNotifications(profile.user_id, 20);
+            setNotifications(notifs || []);
+
             setLoading(false);
         };
 
@@ -41,9 +50,11 @@ const StudentDashboard = () => {
 
     const getStatusIcon = (status: string) => {
         switch (status) {
-            case 'approved': return <CheckCircle size={16} className="text-green-500" />;
+            case 'approved':
+            case 'active': return <CheckCircle size={16} className="text-green-500" />;
             case 'rejected': return <XCircle size={16} className="text-red-500" />;
-            default: return <Clock size={16} className="text-yellow-500" />;
+            case 'pending': return <Clock size={16} className="text-yellow-500" />;
+            default: return <AlertCircle size={16} className="text-gray-400" />;
         }
     };
 
@@ -61,7 +72,8 @@ const StudentDashboard = () => {
                             <h1 className="text-4xl font-black uppercase tracking-tight italic">
                                 {profile?.full_name || 'Student Portal'}
                             </h1>
-                            <span className="bg-govt-accent text-govt-dark text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">
+                            <span className="bg-govt-accent text-govt-dark text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest relative">
+                                <span className="absolute -inset-0.5 bg-govt-accent rounded-full animate-ping opacity-20"></span>
                                 Institutional User
                             </span>
                         </div>
@@ -201,31 +213,60 @@ const StudentDashboard = () => {
                             ) : myMemberships.length > 0 ? (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     {myMemberships.map(m => (
-                                        <Link
+                                        <div
                                             key={m.id}
-                                            to={`/club/${m.clubs?.slug}`}
-                                            className="group border border-govt-border p-5 rounded-sm hover:border-govt-blue transition-all bg-white hover:shadow-xl flex items-center justify-between"
+                                            className={`group border p-6 rounded-sm transition-all bg-white hover:shadow-2xl flex flex-col gap-4 relative overflow-hidden ${m.status === 'active' ? 'border-govt-border hover:border-govt-blue' :
+                                                m.status === 'rejected' ? 'border-red-100 bg-red-50/10 opacity-75' :
+                                                    'border-yellow-100 animate-pulse-subtle'
+                                                }`}
                                         >
-                                            <div className="space-y-1">
-                                                <h4 className="font-black text-govt-dark group-hover:text-govt-blue transition-colors line-clamp-1 uppercase tracking-tight">
-                                                    {m.clubs?.name}
-                                                </h4>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-[9px] font-black bg-govt-light px-2 py-0.5 rounded text-govt-blue uppercase tracking-widest">
-                                                        {m.is_admin ? 'Admin' : 'Member'}
-                                                    </span>
-                                                    {m.is_admin && (
-                                                        <Link
-                                                            to="/dashboard/club_admin"
-                                                            className="text-[9px] font-black text-govt-accent uppercase tracking-widest hover:underline underline-offset-2"
-                                                        >
-                                                            Manage Feed
-                                                        </Link>
+                                            {m.status === 'active' && <div className="absolute top-0 right-0 w-16 h-16 bg-govt-blue/5 -mr-8 -mt-8 rotate-45 group-hover:bg-govt-blue/10 transition-colors"></div>}
+
+                                            <div className="flex justify-between items-start relative z-10">
+                                                <div className="space-y-1">
+                                                    <h4 className="font-black text-govt-dark group-hover:text-govt-blue transition-colors uppercase tracking-tight text-lg">
+                                                        {m.clubs?.name}
+                                                    </h4>
+                                                    <p className="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em] italic">{m.clubs?.slug}</p>
+                                                </div>
+                                                <div className="flex flex-col items-end gap-2">
+                                                    {m.status === 'active' ? (
+                                                        <span className="inline-flex items-center gap-1.5 bg-govt-blue text-white text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-lg">
+                                                            <CheckCircle size={10} className="text-govt-accent" /> Active Affiliation
+                                                        </span>
+                                                    ) : m.status === 'rejected' ? (
+                                                        <span className="inline-flex items-center gap-1.5 bg-red-600 text-white text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-lg">
+                                                            <XCircle size={10} /> Registry Denied
+                                                        </span>
+                                                    ) : (
+                                                        <span className="inline-flex items-center gap-1.5 bg-yellow-400 text-govt-dark text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-lg">
+                                                            <Clock size={10} /> Pending Authorization
+                                                        </span>
                                                     )}
                                                 </div>
                                             </div>
-                                            <ChevronRight className="text-gray-300 group-hover:text-govt-blue transition-colors" size={20} />
-                                        </Link>
+
+                                            <div className="flex items-center justify-between pt-4 border-t border-govt-border/30 relative z-10">
+                                                <div className="flex items-center gap-3">
+                                                    <span className={`text-[9px] font-black px-2.5 py-1 rounded uppercase tracking-[0.15em] ${m.is_admin ? 'bg-govt-dark text-govt-accent border border-govt-accent/30' : 'bg-govt-light text-govt-blue border border-govt-blue/10'}`}>
+                                                        {m.is_admin ? 'Level 2: Admin' : 'Level 1: Regular'}
+                                                    </span>
+                                                    {m.is_admin && m.status === 'active' && (
+                                                        <Link
+                                                            to="/dashboard/club_admin"
+                                                            className="text-[9px] font-black text-govt-blue uppercase tracking-widest hover:text-govt-accent transition-colors flex items-center gap-1 group/link"
+                                                        >
+                                                            Registry Console <ArrowRight size={10} className="group-hover/link:translate-x-1 transition-transform" />
+                                                        </Link>
+                                                    )}
+                                                </div>
+                                                {m.status === 'active' && (
+                                                    <Link to={`/club/${m.clubs?.slug}`} className="p-2 bg-govt-light text-govt-blue rounded hover:bg-govt-blue hover:text-white transition-all">
+                                                        <ChevronRight size={16} />
+                                                    </Link>
+                                                )}
+                                            </div>
+                                        </div>
                                     ))}
                                 </div>
                             ) : (
@@ -236,27 +277,55 @@ const StudentDashboard = () => {
                         </div>
                     </div>
 
+                    {/* Notifications Section */}
+                    <div className="lg:col-span-3">
+                        <div className="card-premium p-8 border-t-4 border-govt-accent">
+                            <h3 className="text-sm font-black text-govt-dark uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+                                <CheckCircle size={18} className="text-govt-accent" /> Recent Notifications
+                            </h3>
+                            {notifications.length > 0 ? (
+                                <div className="space-y-3">
+                                    {notifications.map((notif: any) => (
+                                        <Link
+                                            key={notif.id}
+                                            to={notif.redirect_url || '#'}
+                                            className="block bg-govt-light p-5 rounded border-l-4 border-govt-blue hover:border-govt-accent hover:shadow-lg transition-all group"
+                                        >
+                                            <div className="flex items-start justify-between gap-4">
+                                                <div className="flex-grow">
+                                                    <h4 className="text-sm font-black text-govt-dark uppercase tracking-tight group-hover:text-govt-accent transition-colors">
+                                                        {notif.title}
+                                                    </h4>
+                                                    <p className="text-xs text-gray-600 mt-2 leading-relaxed">
+                                                        {notif.body}
+                                                    </p>
+                                                    <div className="flex items-center gap-4 mt-3">
+                                                        <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">
+                                                            {notif.clubs?.name || 'System'}
+                                                        </span>
+                                                        <span className="text-[9px] text-gray-300">•</span>
+                                                        <span className="text-[9px] font-medium text-gray-400">
+                                                            {new Date(notif.created_at).toLocaleDateString()}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <ArrowRight size={16} className="text-govt-blue group-hover:text-govt-accent group-hover:translate-x-1 transition-all flex-shrink-0 mt-1" />
+                                            </div>
+                                        </Link>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="py-16 text-center text-gray-400 bg-gray-50/30 border border-dashed rounded-sm font-bold uppercase tracking-widest text-[10px]">
+                                    No notifications at this time.
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
     );
 };
-
-const ChevronRight = ({ className, size }: { className?: string, size?: number }) => (
-    <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width={size || 24}
-        height={size || 24}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className={className}
-    >
-        <path d="m9 18 6-6-6-6" />
-    </svg>
-);
 
 export default StudentDashboard;

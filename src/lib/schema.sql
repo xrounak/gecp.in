@@ -92,6 +92,44 @@ as $$
 $$;
 
 
+-- Helper: is_moderator(user_id) -> boolean
+-- Checks if a user has moderator or super_admin role without triggering RLS recursion
+create or replace function public.is_moderator(target_user_id uuid default auth.uid())
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.profiles p
+    join public.roles r on r.id = p.role_id
+    where p.user_id = target_user_id
+      and r.slug in ('moderator', 'super_admin')
+  );
+$$;
+
+
+-- Helper: is_club_admin(club_id, user_id) -> boolean
+-- Checks if a user is an admin of a specific club without triggering RLS recursion
+create or replace function public.is_club_admin(target_club_id uuid, target_user_id uuid default auth.uid())
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.club_members
+    where club_id = target_club_id
+      and user_id = target_user_id
+      and is_admin = true
+  );
+$$;
+
+
 -- Provision profile on new auth user
 create or replace function public.handle_new_user()
 returns trigger
@@ -148,8 +186,33 @@ begin
       for select
       using (
         auth.uid() = user_id
-        or public.current_role() in ('moderator', 'super_admin')
+        or public.is_moderator()
       );
+  end if;
+
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public'
+      and tablename = 'profiles'
+      and policyname = 'Profiles: admins insert'
+  ) then
+    create policy "Profiles: admins insert"
+      on public.profiles
+      for insert
+      with check (public.is_moderator());
+  end if;
+
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public'
+      and tablename = 'profiles'
+      and policyname = 'Profiles: admins update'
+  ) then
+    create policy "Profiles: admins update"
+      on public.profiles
+      for update
+      using (public.is_moderator())
+      with check (public.is_moderator());
   end if;
 end;
 $$;
@@ -217,9 +280,41 @@ create table if not exists public.club_members (
   club_id   uuid not null references public.clubs (id) on delete cascade,
   user_id   uuid not null references auth.users (id) on delete cascade,
   is_admin  boolean not null default false,
+  status    text not null default 'active', -- pending | active | rejected
   joined_at timestamptz not null default now(),
   primary key (club_id, user_id)
 );
+
+-- Membership RLS:
+alter table public.club_members enable row level security;
+
+do $$
+begin
+  -- 1. Everyone can see club memberships (Read-only)
+  if not exists (select 1 from pg_policies where policyname = 'Members: visible to all') then
+    create policy "Members: visible to all" on public.club_members for select using (true);
+  end if;
+
+  -- 2. Students can request to join (Insert pending)
+  if not exists (select 1 from pg_policies where policyname = 'Members: students request join') then
+    create policy "Members: students request join" on public.club_members 
+      for insert with check (auth.uid() = user_id and status = 'pending');
+  end if;
+
+  -- 3. Club Admins can manage their members (Update status/is_admin)
+  if not exists (select 1 from pg_policies where policyname = 'Members: club admins manage') then
+    create policy "Members: club admins manage" on public.club_members
+      for update using (public.is_club_admin(club_id, auth.uid()))
+      with check (public.is_club_admin(club_id, auth.uid()));
+  end if;
+
+  -- 4. Club Admins can remove members (Delete)
+  if not exists (select 1 from pg_policies where policyname = 'Members: club admins delete') then
+    create policy "Members: club admins delete" on public.club_members
+      for delete using (public.is_club_admin(club_id, auth.uid()));
+  end if;
+end;
+$$;
 
 
 create table if not exists public.club_requests (
@@ -407,23 +502,11 @@ begin
       for all
       using (
         public.current_role() in ('moderator', 'super_admin')
-        or exists (
-          select 1
-          from public.club_members cm
-          where cm.club_id = clubs.id
-            and cm.user_id = auth.uid()
-            and cm.is_admin = true
-        )
+        or public.is_club_admin(id)
       )
       with check (
         public.current_role() in ('moderator', 'super_admin')
-        or exists (
-          select 1
-          from public.club_members cm
-          where cm.club_id = clubs.id
-            and cm.user_id = auth.uid()
-            and cm.is_admin = true
-        )
+        or public.is_club_admin(id)
       );
   end if;
 end;
@@ -448,13 +531,7 @@ begin
       using (
         public.current_role() in ('moderator', 'super_admin')
         or user_id = auth.uid()
-        or exists (
-          select 1
-          from public.club_members cm2
-          where cm2.club_id = club_members.club_id
-            and cm2.user_id = auth.uid()
-            and cm2.is_admin = true
-        )
+        or public.is_club_admin(club_id)
       );
   end if;
 
@@ -469,23 +546,11 @@ begin
       for all
       using (
         public.current_role() in ('moderator', 'super_admin')
-        or exists (
-          select 1
-          from public.club_members cm2
-          where cm2.club_id = club_members.club_id
-            and cm2.user_id = auth.uid()
-            and cm2.is_admin = true
-        )
+        or public.is_club_admin(club_id)
       )
       with check (
         public.current_role() in ('moderator', 'super_admin')
-        or exists (
-          select 1
-          from public.club_members cm2
-          where cm2.club_id = club_members.club_id
-            and cm2.user_id = auth.uid()
-            and cm2.is_admin = true
-        )
+        or public.is_club_admin(club_id)
       );
   end if;
 end;
