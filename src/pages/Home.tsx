@@ -75,7 +75,7 @@ const Home = () => {
                         <div className="relative group">
                             <div className="absolute -inset-4 bg-govt-accent/20 blur-2xl rounded-full group-hover:bg-govt-accent/30 transition-all duration-500"></div>
                             <div className="bg-white p-12 rounded-full shadow-2xl relative rotate-3 group-hover:rotate-0 transition-transform duration-500 flex items-center justify-center overflow-hidden">
-                                <img src="/logo.png" alt="College Emblem" className="h-48 w-48 opacity-10 rounded-full" />
+                                <img src="/logo2.jpeg" alt="College Emblem" className="h-48 w-48 opacity-10 rounded-full" />
                                 <div className="absolute inset-0 flex items-center justify-center font-black text-govt-dark text-center px-8 leading-tight">
                                     {siteConfig.acronym} <br /> STUDENT BODIES
                                 </div>
@@ -184,11 +184,11 @@ const Home = () => {
             <section className="max-w-7xl mx-auto px-4 py-24">
                 <div className="card-premium flex flex-col md:flex-row items-center gap-12 p-12 bg-white relative overflow-hidden group">
                     <div className="absolute -bottom-10 -left-10 opacity-5 group-hover:opacity-10 transition-all duration-700">
-                        <img src="/logo.png" alt="Decoration" className="h-64 w-64 rotate-12" />
+                        <img src="/logo2.jpeg" alt="Decoration" className="h-64 w-64 rotate-12" />
                     </div>
                     <div className="md:w-1/4 flex justify-center">
                         <div className="h-40 w-40 govt-gradient p-10 rounded-full flex items-center justify-center text-white shadow-2xl">
-                            <img src="/logo.png" alt="SAC" className="invert" />
+                            <img src="/logo2.jpeg" alt="SAC" className="invert" />
                         </div>
                     </div>
                     <div className="md:w-3/4 space-y-6 relative z-10">
